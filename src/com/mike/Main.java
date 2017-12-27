@@ -43,8 +43,8 @@ public class Main {
 
         Database database = new Database();
         database.getConnection();
-        database.createLogTable();
-        database.populateLogTable(itemList);
+        database.createLogTable(itemList);
+        database.runQuery(startDate,duration,threshold);
 
     }
     public void checkRequest(){

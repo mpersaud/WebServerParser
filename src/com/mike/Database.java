@@ -36,13 +36,18 @@ public class Database {
     }
 
 
-    public  void runQuery(){
+    public  void runQuery(String startDate, String duration, String threshold){
         try {
+            //TODO needs to be fixed
+            Connection conn = null;
+            System.out.println("Connecting to a selected database...");
+            conn = DriverManager.getConnection(db_Path,user,pw);
+            System.out.println("Connected database successfully...");
             Statement myStmt = conn.createStatement();
-            ResultSet myRs = myStmt.executeQuery("select * from sample");
+            ResultSet myRs = myStmt.executeQuery("select ipAddress,count(*) as Occurences from log group by ipAddress;");
             // Do something with the Connection
             while (myRs.next()) {
-                System.out.println(myRs.getString("id"));
+                //System.out.println(myRs.getString("ipAddress") +","+myRs.getString("Occurences"));
             }
         }catch (SQLException ex){
             System.out.println("SQLException: " + ex.getMessage());
@@ -51,24 +56,20 @@ public class Database {
         }
     }
 
-    public static void populateLogTable(List<LogItem> itemList){
+    private static void populateLogTable(List<LogItem> itemList){
 
         Connection conn = null;
         PreparedStatement stmt = null;
         try{
-            //STEP 2: Register JDBC driver
-            Class.forName("com.mysql.jdbc.Driver");
 
-            //STEP 3: Open a connection
+            Class.forName("com.mysql.jdbc.Driver");
             System.out.println("Connecting to a selected database...");
             conn = DriverManager.getConnection(db_Path,user,pw);
-
             System.out.println("Connected database successfully...");
-
-            //STEP 4: Execute a query
             System.out.println("Inserting values in given table...");
-            stmt = conn.prepareStatement("insert into log(id,ipAddress,request,userAgent,status,date) value (0,?,?,?,?,?)");
 
+            stmt = conn.prepareStatement("insert into log(id,ipAddress,request,userAgent,status,date) value (0,?,?,?,?,?)");
+            System.out.println("Loading...");
             for (LogItem logItem : itemList) {
                 stmt.setString(1,logItem.ipAddress);
                 stmt.setString(2,logItem.request);
@@ -76,12 +77,9 @@ public class Database {
                 stmt.setInt(4,logItem.status);
                 stmt.setString(5,logItem.date);
                 stmt.executeUpdate();
-
             }
 
-
-
-            System.out.println("Updated in given Table...");
+            System.out.println("Updated values in given Table...");
         }catch(SQLException se){
             //Handle errors for JDBC
             se.printStackTrace();
@@ -102,28 +100,21 @@ public class Database {
                 se.printStackTrace();
             }//end finally try
         }//end try
-        System.out.println("Goodbye!");
-
-
-
+        System.out.println("Success!");
 
     }
-    public static void createLogTable(){
+    public static void createLogTable(List<LogItem> itemList){
 
         Connection conn = null;
         Statement stmt = null;
         try{
-            //STEP 2: Register JDBC driver
-            Class.forName("com.mysql.jdbc.Driver");
 
-            //STEP 3: Open a connection
+            Class.forName("com.mysql.jdbc.Driver");
             System.out.println("Connecting to a selected database...");
             conn = DriverManager.getConnection(db_Path,user,pw);
-
             System.out.println("Connected database successfully...");
-
-            //STEP 4: Execute a query
             System.out.println("Creating table in given database...");
+
             stmt = conn.createStatement();
             String sqlCheck="DROP TABLE IF EXISTS LOG";
             String sql =
@@ -135,13 +126,17 @@ public class Database {
                     " status INTEGER, " +
                     " date DATETIME, " +
                     " PRIMARY KEY ( id ))";
-            stmt.executeUpdate(sqlCheck);
-            stmt.executeUpdate(sql);
 
+            //stmt.executeUpdate(sqlCheck);
+            stmt.executeUpdate(sql);
             System.out.println("Created table in given database...");
+            populateLogTable(itemList);
         }catch(SQLException se){
             //Handle errors for JDBC
-            se.printStackTrace();
+            //supress StackTrace
+            //se.printStackTrace();
+            //System.out.println("Table already exists!");
+            System.out.println(se.getMessage());
         }catch(Exception e){
             //Handle errors for Class.forName
             e.printStackTrace();
@@ -157,12 +152,11 @@ public class Database {
                     conn.close();
             }catch(SQLException se){
                 se.printStackTrace();
+                System.out.println("Success!");
             }//end finally try
         }//end try
-        System.out.println("Goodbye!");
 
 
     }
-
 
 }
