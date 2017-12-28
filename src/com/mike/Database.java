@@ -1,12 +1,19 @@
 package com.mike;
 
+import sun.java2d.pipe.SpanShapeRenderer;
+
 import java.sql.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 public class Database {
     Connection conn = null;
-    static String user= "root";
-    static String pw = "kilik1";
+    static String user= "admin";
+    static String pw = "mypass";
     static String db_Path= "jdbc:mysql://localhost:3306/log_db";
     public void getConnection(){
 
@@ -36,24 +43,57 @@ public class Database {
     }
 
 
-    public  void runQuery(String startDate, String duration, String threshold){
+    public  void runQuery(String startDate, String duration, int threshold){
         try {
             //TODO needs to be fixed
-            Connection conn = null;
+            String stringEndDate = null;
+            Date endDate;
+            Connection conn;
+            try {
+                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd.HH:mm:ss");
+                Date date = formatter.parse(startDate);
+                System.out.println("START DATE " + date.toString());
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(date);
+                if(duration=="daily"){
+                    cal.add(Calendar.DAY_OF_MONTH,1);
+                }
+                else{
+                    cal.add(Calendar.HOUR,1);
+                }
+
+                endDate = cal.getTime();
+                stringEndDate = formatter.format(endDate).toString();
+                System.out.println("END DATE: "+ formatter.format(endDate));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
             System.out.println("Connecting to a selected database...");
             conn = DriverManager.getConnection(db_Path,user,pw);
             System.out.println("Connected database successfully...");
-            Statement myStmt = conn.createStatement();
-            ResultSet myRs = myStmt.executeQuery("select ipAddress,count(*) as Occurences from log group by ipAddress;");
+            String sql ="select ipAddress,count(ipAddress) as Occurences "+
+                        "from log   " +
+                        "where date between ? AND "+ "?" +
+                        "group by ipAddress " +
+                        "having count(*)>=? " +
+                        "order by count(*)asc";
+            PreparedStatement myStmt = conn.prepareStatement(sql);
+            myStmt.setString(1,startDate);
+            myStmt.setString(2,stringEndDate);
+            myStmt.setInt(3,threshold);
+            //myStmt.executeQuery();
+            ResultSet myRs = myStmt.executeQuery();
             // Do something with the Connection
+
             while (myRs.next()) {
-                //System.out.println(myRs.getString("ipAddress") +","+myRs.getString("Occurences"));
+                System.out.println("IP ADDRESS: "+myRs.getString("ipAddress") +" | OCCURENCES :"+myRs.getString("Occurences"));
             }
         }catch (SQLException ex){
             System.out.println("SQLException: " + ex.getMessage());
             System.out.println("SQLState: " + ex.getSQLState());
             System.out.println("VendorError: " + ex.getErrorCode());
         }
+        System.out.println("Finished Running Query");
     }
 
     private static void populateLogTable(List<LogItem> itemList){

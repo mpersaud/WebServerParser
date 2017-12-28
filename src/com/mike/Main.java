@@ -16,7 +16,7 @@ public class Main {
         }
         String startDate=args[0];
         String duration= args[1];
-        String threshold= args[2];
+        int threshold= Integer.parseInt(args[2]);
         List<LogItem> itemList = new ArrayList<>();
         try {
             BufferedReader br = new BufferedReader(new FileReader(new File("access.log")));
