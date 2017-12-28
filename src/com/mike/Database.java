@@ -1,11 +1,9 @@
 package com.mike;
 
-import sun.java2d.pipe.SpanShapeRenderer;
 
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -14,25 +12,24 @@ public class Database {
     Connection conn = null;
     static String user= "admin";
     static String pw = "mypass";
-    static String db_Path= "jdbc:mysql://localhost:3306/log_db";
+    static String useSLL ="?useSSL=false";
+    static String db_Path= "jdbc:mysql://localhost:3306/log_db"+useSLL;
+
     public void getConnection(){
 
         try {
             // The newInstance() call is a work around for some
             // broken Java implementations
-
             Class.forName("com.mysql.jdbc.Driver").newInstance();
         } catch (Exception ex) {
             // handle the error
         }
 
         try {
-
             conn = DriverManager.getConnection(db_Path,user,pw);
             if(conn.isValid(0))
                 System.out.println("Connection Successful");
             conn.close();
-
 
         } catch (SQLException ex) {
             // handle any errors
@@ -42,10 +39,9 @@ public class Database {
         }
     }
 
-
     public  void runQuery(String startDate, String duration, int threshold){
         try {
-            //TODO needs to be fixed
+            //TODO needs to be tweaked
             String stringEndDate = null;
             Date endDate;
             Connection conn;
@@ -61,7 +57,6 @@ public class Database {
                 else{
                     cal.add(Calendar.HOUR,1);
                 }
-
                 endDate = cal.getTime();
                 stringEndDate = formatter.format(endDate).toString();
                 System.out.println("END DATE: "+ formatter.format(endDate));
@@ -81,10 +76,8 @@ public class Database {
             myStmt.setString(1,startDate);
             myStmt.setString(2,stringEndDate);
             myStmt.setInt(3,threshold);
-            //myStmt.executeQuery();
             ResultSet myRs = myStmt.executeQuery();
             // Do something with the Connection
-
             while (myRs.next()) {
                 System.out.println("IP ADDRESS: "+myRs.getString("ipAddress") +" | OCCURENCES :"+myRs.getString("Occurences"));
             }
@@ -108,7 +101,8 @@ public class Database {
             System.out.println("Connected database successfully...");
             System.out.println("Inserting values in given table...");
 
-            stmt = conn.prepareStatement("insert into log(id,ipAddress,request,userAgent,status,date) value (0,?,?,?,?,?)");
+            stmt = conn.prepareStatement("insert into log(id,ipAddress,request,userAgent,status,date)"+
+                                              "value (0,?,?,?,?,?)");
             System.out.println("Loading...");
             for (LogItem logItem : itemList) {
                 stmt.setString(1,logItem.ipAddress);
@@ -118,7 +112,6 @@ public class Database {
                 stmt.setString(5,logItem.date);
                 stmt.executeUpdate();
             }
-
             System.out.println("Updated values in given Table...");
         }catch(SQLException se){
             //Handle errors for JDBC
@@ -148,7 +141,6 @@ public class Database {
         Connection conn = null;
         Statement stmt = null;
         try{
-
             Class.forName("com.mysql.jdbc.Driver");
             System.out.println("Connecting to a selected database...");
             conn = DriverManager.getConnection(db_Path,user,pw);
@@ -173,7 +165,7 @@ public class Database {
             populateLogTable(itemList);
         }catch(SQLException se){
             //Handle errors for JDBC
-            //supress StackTrace
+            //suppress StackTrace
             //se.printStackTrace();
             //System.out.println("Table already exists!");
             System.out.println(se.getMessage());
@@ -195,8 +187,7 @@ public class Database {
                 System.out.println("Success!");
             }//end finally try
         }//end try
-
-
+        
     }
 
 }

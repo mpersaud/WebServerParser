@@ -3,13 +3,11 @@ package com.mike;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class Main {
 
     public static void main(String[] args) {
-	// write your code here
         if(args.length!=3){
             System.out.println("Invalid amount of Args");
             return;
@@ -21,9 +19,7 @@ public class Main {
         try {
             BufferedReader br = new BufferedReader(new FileReader(new File("access.log")));
             String line;
-
             while((line =br.readLine())!=null){
-
                 String [] tokens = line.split("\\|");
                 String date = tokens[0];
                 String ipAddress= tokens[1];
@@ -32,7 +28,6 @@ public class Main {
                 String userAgent= tokens[4];
                 LogItem item = new LogItem(date,ipAddress,request,Integer.parseInt(status),userAgent);
                 itemList.add(item);
-
             }
             br.close();
         }catch (FileNotFoundException fe){
@@ -40,14 +35,11 @@ public class Main {
         }catch (IOException ioe){
 
         }
-
         Database database = new Database();
         database.getConnection();
         database.createLogTable(itemList);
         database.runQuery(startDate,duration,threshold);
 
     }
-    public void checkRequest(){
 
-    }
 }
